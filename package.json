@@ -1,7 +1,7 @@
 {
   "name": "plan-my-meal",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -22,7 +22,7 @@
     "nativewind": "^4.2.1",
     "react": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-reanimated": "^4.2.1",
+    "react-native-reanimated": "~4.1.1",
     "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
