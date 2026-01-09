@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, LinearGradient } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
@@ -6,6 +6,7 @@ import { DayOfWeek, MealType, DayPlan, WeeklyPlan } from '@/types/meal';
 import { storageService } from '@/services/storageService';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -116,6 +117,13 @@ export default function MealPlanScreen() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const getGreeting = (): string => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Morning';
+    if (hour < 17) return 'Afternoon';
+    return 'Evening';
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -125,17 +133,65 @@ export default function MealPlanScreen() {
     );
   }
 
+  const totalMeals = weeklyPlan?.days.reduce((acc, day) => acc + Object.values(day.meals).filter(Boolean).length, 0) || 0;
+  const totalPossible = weeklyPlan?.days.length * 4 || 28;
+  const progressPercentage = Math.round((totalMeals / totalPossible) * 100);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>Plan My Meal</Text>
-          <Text style={styles.subtitle}>
-            {weeklyPlan ? `${formatDate(weeklyPlan.startDate)} - ${formatDate(weeklyPlan.endDate)}` : ''}
-          </Text>
+      {/* Gradient Header */}
+      <LinearGradient
+        colors={[Colors.light.primary, Colors.light.primaryDark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerTop}>
+          <View style={styles.headerContent}>
+            <Text style={styles.greeting}>Good {getGreeting()}! 👋</Text>
+            <Text style={styles.title}>Plan My Meal</Text>
+          </View>
+          <TouchableOpacity style={styles.profileButton} activeOpacity={0.7}>
+            <View style={styles.profileAvatar}>
+              <Ionicons name="person" size={24} color={Colors.light.primary} />
+            </View>
+          </TouchableOpacity>
         </View>
-      </View>
+
+        {/* Progress Card */}
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeader}>
+            <View style={styles.progressInfo}>
+              <Text style={styles.progressTitle}>Weekly Progress</Text>
+              <Text style={styles.progressSubtitle}>
+                {weeklyPlan ? `${formatDate(weeklyPlan.startDate)} - ${formatDate(weeklyPlan.endDate)}` : ''}
+              </Text>
+            </View>
+            <View style={styles.progressCircle}>
+              <Text style={styles.progressPercentage}>{progressPercentage}%</Text>
+            </View>
+          </View>
+          <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBar, { width: `${progressPercentage}%` }]} />
+          </View>
+          <View style={styles.progressStats}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{totalMeals}</Text>
+              <Text style={styles.statLabel}>Planned</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{totalPossible - totalMeals}</Text>
+              <Text style={styles.statLabel}>Remaining</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{weeklyPlan?.days.length || 7}</Text>
+              <Text style={styles.statLabel}>Days</Text>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
 
       {/* Days List */}
       <ScrollView
@@ -143,67 +199,84 @@ export default function MealPlanScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {weeklyPlan?.days.map((dayPlan, dayIndex) => (
-          <View key={dayPlan.day} style={styles.dayCard}>
-            {/* Day Header */}
-            <View style={styles.dayHeader}>
-              <View style={styles.dayInfo}>
-                <View style={[styles.dayBadge, { backgroundColor: Colors.light.primaryLightest }]}>
-                  <Text style={[styles.dayLabel, { color: Colors.light.primaryDark }]}>
-                    {getDayLabel(dayPlan.day)}
+        {weeklyPlan?.days.map((dayPlan, dayIndex) => {
+          const dayMealCount = Object.values(dayPlan.meals).filter(Boolean).length;
+          const isToday = new Date().toISOString().split('T')[0] === dayPlan.date;
+
+          return (
+            <View key={dayPlan.day} style={[styles.dayCard, isToday && styles.todayCard]}>
+              {/* Day Header */}
+              <View style={styles.dayHeader}>
+                <View style={styles.dayInfo}>
+                  <View style={[styles.dayBadge, { backgroundColor: isToday ? Colors.light.primary : Colors.light.primaryLightest }]}>
+                    <Text style={[styles.dayLabel, { color: isToday ? Colors.light.textLight : Colors.light.primaryDark }]}>
+                      {getDayLabel(dayPlan.day)}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.dateText, isToday && styles.todayDate]}>{formatDate(dayPlan.date)}</Text>
+                    {isToday && <Text style={styles.todayLabel}>Today</Text>}
+                  </View>
+                </View>
+                <View style={[styles.mealCount, { backgroundColor: isToday ? Colors.light.primaryLightest : Colors.light.background }]}>
+                  <Ionicons name="restaurant" size={14} color={isToday ? Colors.light.primary : Colors.light.textSecondary} />
+                  <Text style={[styles.mealCountText, isToday && styles.todayMealCount]}>
+                    {dayMealCount}/4
                   </Text>
                 </View>
-                <Text style={styles.dateText}>{formatDate(dayPlan.date)}</Text>
               </View>
-              <View style={styles.mealCount}>
-                <Text style={styles.mealCountText}>
-                  {Object.values(dayPlan.meals).filter(Boolean).length}/4
-                </Text>
-              </View>
-            </View>
 
-            {/* Meal Slots */}
-            <View style={styles.mealSlots}>
-              {MEAL_TYPES.map((mealType) => {
-                const meal = dayPlan.meals[mealType.type];
-                return (
-                  <View key={mealType.type} style={styles.mealSlot}>
-                    {meal ? (
-                      <TouchableOpacity
-                        onLongPress={() => handleDeleteMeal(meal.id)}
-                        onPress={() => handleMealPress(meal.id)}
-                        style={styles.mealCard}
-                        activeOpacity={0.7}
-                      >
-                        <View style={[styles.mealTypeIndicator, { backgroundColor: mealType.color }]} />
-                        <View style={styles.mealContent}>
-                          <Text style={styles.mealIcon}>{mealType.icon}</Text>
-                          <View style={styles.mealInfo}>
-                            <Text style={styles.mealName} numberOfLines={1}>{meal.name}</Text>
-                            <Text style={styles.mealDetails}>{meal.servings} servings</Text>
+              {/* Meal Slots */}
+              <View style={styles.mealSlots}>
+                {MEAL_TYPES.map((mealType) => {
+                  const meal = dayPlan.meals[mealType.type];
+                  return (
+                    <View key={mealType.type} style={styles.mealSlot}>
+                      {meal ? (
+                        <TouchableOpacity
+                          onLongPress={() => handleDeleteMeal(meal.id)}
+                          onPress={() => handleMealPress(meal.id)}
+                          style={styles.mealCard}
+                          activeOpacity={0.7}
+                        >
+                          <View style={[styles.mealTypeIndicator, { backgroundColor: mealType.color }]} />
+                          <View style={styles.mealContent}>
+                            <View style={[styles.mealIconContainer, { backgroundColor: `${mealType.color}20` }]}>
+                              <Text style={styles.mealIcon}>{mealType.icon}</Text>
+                            </View>
+                            <View style={styles.mealInfo}>
+                              <Text style={styles.mealName} numberOfLines={1}>{meal.name}</Text>
+                              <View style={styles.mealMeta}>
+                                <Text style={styles.mealDetails}>{meal.servings} servings</Text>
+                                <Text style={styles.mealTypeLabel}>{mealType.label}</Text>
+                              </View>
+                            </View>
                           </View>
-                        </View>
-                        <Ionicons name="create-outline" size={20} color={Colors.light.textSecondary} />
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        onPress={() => handleAddMeal(dayPlan.day, mealType.type)}
-                        style={styles.addMealCard}
-                        activeOpacity={0.7}
-                      >
-                        <View style={[styles.mealTypeIndicator, { backgroundColor: Colors.light.borderLight }]} />
-                        <Text style={styles.addMealIcon}>{mealType.icon}</Text>
-                        <Text style={styles.addMealText}>Add {mealType.label}</Text>
-                        <View style={styles.addIcon}>
-                          <Ionicons name="add" size={18} color={Colors.light.primary} />
-                        </View>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })}
+                          <View style={styles.editButton}>
+                            <Ionicons name="create-outline" size={18} color={Colors.light.primary} />
+                          </View>
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          onPress={() => handleAddMeal(dayPlan.day, mealType.type)}
+                          style={[styles.addMealCard, isToday && styles.addMealCardToday]}
+                          activeOpacity={0.7}
+                        >
+                          <View style={[styles.mealTypeIndicator, { backgroundColor: Colors.light.borderLight }]} />
+                          <View style={[styles.mealIconContainer, { backgroundColor: Colors.light.background }]}>
+                            <Text style={[styles.addMealIcon, { opacity: 0.5 }]}>{mealType.icon}</Text>
+                          </View>
+                          <Text style={styles.addMealText}>Add {mealType.label}</Text>
+                          <View style={[styles.addIcon, isToday && { backgroundColor: Colors.light.primary }]}>
+                            <Ionicons name="add" size={16} color={isToday ? Colors.light.textLight : Colors.light.primary} />
+                          </View>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
             </View>
-          </View>
         ))}
       </ScrollView>
 
@@ -236,24 +309,138 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
   },
   header: {
-    backgroundColor: Colors.light.primary,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 24,
     paddingTop: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   headerContent: {
     gap: 4,
   },
+  greeting: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.light.textLight,
+    opacity: 0.9,
+  },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '800',
     color: Colors.light.textLight,
     letterSpacing: -0.5,
   },
-  subtitle: {
-    fontSize: 15,
-    color: Colors.light.textLight,
-    opacity: 0.9,
+  profileButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  profileAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+    backgroundColor: Colors.light.textLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.light.textLight,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressCard: {
+    backgroundColor: Colors.light.textLight,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressInfo: {
+    flex: 1,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  progressSubtitle: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
+  },
+  progressCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.light.primaryLightest,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: Colors.light.primary,
+  },
+  progressPercentage: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.light.primary,
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: Colors.light.borderLight,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: Colors.light.primary,
+    borderRadius: 4,
+  },
+  progressStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: Colors.light.textSecondary,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: Colors.light.border,
   },
   scrollView: {
     flex: 1,
@@ -264,15 +451,25 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 20,
+    marginBottom: 20,
     shadowColor: Colors.light.shadow,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 5,
     borderWidth: 1,
     borderColor: Colors.light.border,
+    overflow: 'hidden',
+  },
+  todayCard: {
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
   dayHeader: {
     flexDirection: 'row',
@@ -281,6 +478,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
+    backgroundColor: Colors.light.cardBackground,
   },
   dayInfo: {
     flexDirection: 'row',
@@ -288,56 +486,84 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   dayBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    shadowColor: Colors.light.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 2,
   },
   dayLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   dateText: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.light.textSecondary,
+    fontWeight: '500',
+  },
+  todayDate: {
+    color: Colors.light.primary,
+    fontWeight: '700',
+  },
+  todayLabel: {
+    fontSize: 11,
+    color: Colors.light.primary,
+    fontWeight: '600',
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   mealCount: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: Colors.light.background,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 12,
+    gap: 6,
   },
   mealCountText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: Colors.light.textSecondary,
   },
+  todayMealCount: {
+    color: Colors.light.primary,
+  },
   mealSlots: {
-    padding: 12,
-    gap: 8,
+    padding: 14,
+    gap: 10,
   },
   mealSlot: {
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   mealCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.primaryLightest,
-    padding: 12,
-    borderRadius: 12,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.light.borderLight,
+    shadowColor: Colors.light.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 2,
   },
   mealTypeIndicator: {
-    width: 4,
+    width: 5,
     height: '100%',
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
   },
   mealContent: {
     flexDirection: 'row',
@@ -346,65 +572,107 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     gap: 12,
   },
+  mealIconContainer: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   mealIcon: {
+    fontSize: 22,
+  },
+  addMealIcon: {
     fontSize: 20,
   },
   mealInfo: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   mealName: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.light.text,
+    letterSpacing: -0.2,
+  },
+  mealMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   mealDetails: {
     fontSize: 13,
     color: Colors.light.textSecondary,
+    fontWeight: '500',
+  },
+  mealTypeLabel: {
+    fontSize: 11,
+    color: Colors.light.textTertiary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    backgroundColor: Colors.light.background,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  editButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.light.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   addMealCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.inputBackground,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 2,
     borderColor: Colors.light.border,
     borderStyle: 'dashed',
   },
-  addMealIcon: {
-    fontSize: 18,
-    marginLeft: 12,
-    opacity: 0.5,
+  addMealCardToday: {
+    backgroundColor: Colors.light.primaryLightest,
+    borderColor: Colors.light.primary,
+    borderWidth: 2,
   },
   addMealText: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.light.textSecondary,
-    marginLeft: 8,
+    marginLeft: 12,
   },
   addIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: Colors.light.cardBackground,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: Colors.light.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
   },
   fab: {
     position: 'absolute',
     bottom: 24,
     right: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
   },
 });
