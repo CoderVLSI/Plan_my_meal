@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, LinearGradient } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
@@ -6,7 +6,7 @@ import { DayOfWeek, MealType, DayPlan, WeeklyPlan } from '@/types/meal';
 import { storageService } from '@/services/storageService';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -277,7 +277,8 @@ export default function MealPlanScreen() {
                 })}
               </View>
             </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       {/* Generate Ingredients FAB */}
