@@ -93,7 +93,7 @@ export default function ShoppingScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-4">
+      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 100 }}>
         {ingredients.length === 0 ? (
           <View className="items-center justify-center py-20">
             <Ionicons name="cart-outline" size={64} color={Colors.light.tabIconDefault} />

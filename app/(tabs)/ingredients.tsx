@@ -158,7 +158,7 @@ export default function IngredientsScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-4">
+      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 100 }}>
         {!hasPlan ? (
           <View className="items-center justify-center py-20">
             <Ionicons name="calendar-outline" size={64} color={Colors.light.tabIconDefault} />
@@ -215,8 +215,9 @@ export default function IngredientsScreen() {
         <TouchableOpacity
           onPress={handleGenerate}
           disabled={isGenerating}
-          className="absolute bottom-24 right-4 bg-primary rounded-full p-4 shadow-lg"
+          className="absolute bottom-6 right-4 bg-primary rounded-full p-4 shadow-lg"
           activeOpacity={0.8}
+          style={{ marginBottom: insets.bottom + 24 }}
         >
           {isGenerating ? (
             <ActivityIndicator size="small" color="white" />
@@ -231,8 +232,9 @@ export default function IngredientsScreen() {
         <TouchableOpacity
           onPress={handleGenerate}
           disabled={isGenerating}
-          className="absolute bottom-24 right-4 bg-secondary rounded-full p-4 shadow-lg"
+          className="absolute bottom-6 right-4 bg-secondary rounded-full p-4 shadow-lg"
           activeOpacity={0.8}
+          style={{ marginBottom: insets.bottom + 24 }}
         >
           {isGenerating ? (
             <ActivityIndicator size="small" color="white" />
