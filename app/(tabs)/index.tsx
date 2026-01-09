@@ -149,7 +149,7 @@ export default function MealPlanScreen() {
             <View style={styles.dayHeader}>
               <View style={styles.dayInfo}>
                 <View style={[styles.dayBadge, { backgroundColor: Colors.light.primaryLightest }]}>
-                  <Text style={[styles.dayLabel, { color: Colors.light.primaryDark }]})}>
+                  <Text style={[styles.dayLabel, { color: Colors.light.primaryDark }]}>
                     {getDayLabel(dayPlan.day)}
                   </Text>
                 </View>
