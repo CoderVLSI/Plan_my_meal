@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,11 +10,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-const MEAL_TYPES: { type: MealType; icon: string; label: string }[] = [
-  { type: 'breakfast', icon: '☕', label: 'Breakfast' },
-  { type: 'lunch', icon: '🍽️', label: 'Lunch' },
-  { type: 'dinner', icon: '🌙', label: 'Dinner' },
-  { type: 'snacks', icon: '🍎', label: 'Snacks' },
+const MEAL_TYPES: { type: MealType; icon: string; label: string; color: string }[] = [
+  { type: 'breakfast', icon: '☕', label: 'Breakfast', color: Colors.light.breakfast },
+  { type: 'lunch', icon: '🍽️', label: 'Lunch', color: Colors.light.lunch },
+  { type: 'dinner', icon: '🌙', label: 'Dinner', color: Colors.light.dinner },
+  { type: 'snacks', icon: '🍎', label: 'Snacks', color: Colors.light.snacks },
 ];
 
 export default function MealModal() {
@@ -143,108 +143,118 @@ export default function MealModal() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View className="flex-row items-center justify-between bg-primary px-4 pb-4 pt-2">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <Ionicons name="close" size={28} color="white" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+          <Ionicons name="close" size={28} color={Colors.light.text} />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-white flex-1 text-center mr-8">
-          {isEditing ? 'Edit Meal' : 'Add Meal'}
-        </Text>
+        <Text style={styles.headerTitle}>{isEditing ? 'Edit Meal' : 'Add Meal'}</Text>
         {isEditing && (
-          <TouchableOpacity onPress={handleDelete} className="p-2">
-            <Ionicons name="trash-outline" size={24} color="white" />
+          <TouchableOpacity onPress={handleDelete} style={styles.headerButton}>
+            <Ionicons name="trash-outline" size={24} color={Colors.light.error} />
           </TouchableOpacity>
         )}
       </View>
 
-      <ScrollView className="flex-1 px-4 py-4">
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Meal Name */}
-        <View className="mb-4">
-          <Text className="text-text font-semibold mb-2 text-base">Meal Name</Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>Meal Name</Text>
           <TextInput
             value={mealName}
             onChangeText={setMealName}
             placeholder="e.g., Butter Chicken"
-            placeholderTextColor="#999"
-            className="bg-cardBackground border border-border rounded-lg p-4 text-text text-base"
+            placeholderTextColor={Colors.light.textTertiary}
+            style={styles.input}
           />
         </View>
 
         {/* Day Selection */}
-        <View className="mb-4">
-          <Text className="text-text font-semibold mb-2 text-base">Day</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-            {DAYS.map((day) => (
-              <TouchableOpacity
-                key={day}
-                onPress={() => setSelectedDay(day)}
-                className={`mr-2 px-4 py-2 rounded-lg ${
-                  selectedDay === day ? 'bg-primary' : 'bg-cardBackground border border-border'
-                }`}
-              >
-                <Text
-                  className={`font-medium text-sm ${
-                    selectedDay === day ? 'text-white' : 'text-text'
-                  }`}
+        <View style={styles.section}>
+          <Text style={styles.label}>Day</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll}>
+            {DAYS.map((day) => {
+              const isSelected = selectedDay === day;
+              return (
+                <TouchableOpacity
+                  key={day}
+                  onPress={() => setSelectedDay(day)}
+                  style={[
+                    styles.dayChip,
+                    isSelected && styles.dayChipSelected,
+                  ]}
+                  activeOpacity={0.7}
                 >
-                  {day.charAt(0).toUpperCase() + day.slice(1, 3)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.dayChipText,
+                      isSelected && styles.dayChipTextSelected,
+                    ]}
+                  >
+                    {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
         {/* Meal Type Selection */}
-        <View className="mb-4">
-          <Text className="text-text font-semibold mb-2 text-base">Meal Type</Text>
-          <View className="flex-row flex-wrap">
-            {MEAL_TYPES.map((meal) => (
-              <TouchableOpacity
-                key={meal.type}
-                onPress={() => setSelectedMealType(meal.type)}
-                className={`mr-2 mb-2 px-4 py-3 rounded-lg flex-row items-center ${
-                  selectedMealType === meal.type ? 'bg-primary' : 'bg-cardBackground border border-border'
-                }`}
-              >
-                <Text className="text-lg mr-2">{meal.icon}</Text>
-                <Text
-                  className={`font-medium text-sm ${
-                    selectedMealType === meal.type ? 'text-white' : 'text-text'
-                  }`}
+        <View style={styles.section}>
+          <Text style={styles.label}>Meal Type</Text>
+          <View style={styles.mealTypesGrid}>
+            {MEAL_TYPES.map((meal) => {
+              const isSelected = selectedMealType === meal.type;
+              return (
+                <TouchableOpacity
+                  key={meal.type}
+                  onPress={() => setSelectedMealType(meal.type)}
+                  style={[
+                    styles.mealTypeCard,
+                    isSelected && { borderColor: meal.color, backgroundColor: Colors.light.primaryLightest },
+                  ]}
+                  activeOpacity={0.7}
                 >
-                  {meal.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={styles.mealTypeIcon}>{meal.icon}</Text>
+                  <Text
+                    style={[
+                      styles.mealTypeLabel,
+                      isSelected && { color: meal.color },
+                    ]}
+                  >
+                    {meal.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
         {/* Servings */}
-        <View className="mb-4">
-          <Text className="text-text font-semibold mb-2 text-base">Number of Servings</Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>Number of Servings</Text>
           <TextInput
             value={servings}
             onChangeText={setServings}
             keyboardType="number-pad"
             placeholder="4"
-            placeholderTextColor="#999"
-            className="bg-cardBackground border border-border rounded-lg p-4 text-text text-base"
+            placeholderTextColor={Colors.light.textTertiary}
+            style={styles.input}
           />
         </View>
 
-        {/* Recipe Notes (Optional) */}
-        <View className="mb-6">
-          <Text className="text-text font-semibold mb-2 text-base">Recipe Notes (Optional)</Text>
+        {/* Recipe Notes */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Recipe Notes (Optional)</Text>
           <TextInput
             value={recipe}
             onChangeText={setRecipe}
             placeholder="Add cooking instructions or notes..."
-            placeholderTextColor="#999"
+            placeholderTextColor={Colors.light.textTertiary}
             multiline
             numberOfLines={4}
-            className="bg-cardBackground border border-border rounded-lg p-4 text-text text-base min-h-[100px]"
+            style={[styles.input, styles.textArea]}
             textAlignVertical="top"
           />
         </View>
@@ -252,12 +262,131 @@ export default function MealModal() {
         {/* Save Button */}
         <TouchableOpacity
           onPress={handleSave}
-          className="bg-primary rounded-lg p-4 items-center shadow-sm"
-          activeOpacity={0.8}
+          style={[styles.saveButton, { backgroundColor: Colors.light.primary }]}
+          activeOpacity={0.9}
         >
-          <Text className="text-white font-bold text-base">{isEditing ? 'Update Meal' : 'Add Meal'}</Text>
+          <Text style={styles.saveButtonText}>{isEditing ? 'Update Meal' : 'Add Meal'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 12,
+    backgroundColor: Colors.light.cardBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  headerButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: Colors.light.cardBackground,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  textArea: {
+    minHeight: 120,
+    paddingTop: 16,
+  },
+  dayScroll: {
+    flexDirection: 'row',
+  },
+  dayChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Colors.light.cardBackground,
+    borderWidth: 1.5,
+    borderColor: Colors.light.border,
+    marginRight: 10,
+  },
+  dayChipSelected: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  dayChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.textSecondary,
+  },
+  dayChipTextSelected: {
+    color: Colors.light.textLight,
+  },
+  mealTypesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  mealTypeCard: {
+    width: '47%',
+    backgroundColor: Colors.light.cardBackground,
+    borderWidth: 1.5,
+    borderColor: Colors.light.border,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  mealTypeIcon: {
+    fontSize: 28,
+  },
+  mealTypeLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.light.textSecondary,
+  },
+  saveButton: {
+    borderRadius: 14,
+    padding: 18,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 40,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.textLight,
+    letterSpacing: 0.5,
+  },
+});

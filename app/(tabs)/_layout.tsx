@@ -6,22 +6,30 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tabIconSelected,
+        tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.light.cardBackground,
+          backgroundColor: Colors.light.tabBar,
           borderTopWidth: 1,
-          borderTopColor: Colors.light.border,
+          borderTopColor: Colors.light.tabBarBorder,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        tabBarActiveBackgroundColor: Colors.light.primaryLightest,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Meal Plan',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -29,8 +37,8 @@ export default function TabLayout() {
         name="ingredients"
         options={{
           title: 'Ingredients',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'list' : 'list-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -38,8 +46,8 @@ export default function TabLayout() {
         name="shopping"
         options={{
           title: 'Shopping',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'cart' : 'cart-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -47,8 +55,8 @@ export default function TabLayout() {
         name="recipes"
         options={{
           title: 'Recipes',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="book-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'book' : 'book-outline'} size={size} color={color} />
           ),
         }}
       />

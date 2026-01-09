@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
@@ -9,11 +9,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-const MEAL_TYPES: { type: MealType; icon: string; label: string }[] = [
-  { type: 'breakfast', icon: '☕', label: 'Breakfast' },
-  { type: 'lunch', icon: '🍽️', label: 'Lunch' },
-  { type: 'dinner', icon: '🌙', label: 'Dinner' },
-  { type: 'snacks', icon: '🍎', label: 'Snacks' },
+const MEAL_TYPES: { type: MealType; icon: string; label: string; color: string }[] = [
+  { type: 'breakfast', icon: '☕', label: 'Breakfast', color: Colors.light.breakfast },
+  { type: 'lunch', icon: '🍽️', label: 'Lunch', color: Colors.light.lunch },
+  { type: 'dinner', icon: '🌙', label: 'Dinner', color: Colors.light.dinner },
+  { type: 'snacks', icon: '🍎', label: 'Snacks', color: Colors.light.snacks },
 ];
 
 export default function MealPlanScreen() {
@@ -30,7 +30,6 @@ export default function MealPlanScreen() {
     try {
       const plan = await storageService.getCurrentMealPlan();
       if (!plan) {
-        // Create a new weekly plan
         const newPlan = createNewWeeklyPlan();
         await storageService.saveMealPlan(newPlan);
         setWeeklyPlan(newPlan);
@@ -108,12 +107,8 @@ export default function MealPlanScreen() {
     ]);
   };
 
-  const getMealTypeIcon = (type: MealType): string => {
-    return MEAL_TYPES.find((m) => m.type === type)?.icon || '🍽️';
-  };
-
   const getDayLabel = (day: DayOfWeek): string => {
-    return day.charAt(0).toUpperCase() + day.slice(1);
+    return day.charAt(0).toUpperCase() + day.slice(1, 3);
   };
 
   const formatDate = (dateStr: string): string => {
@@ -123,65 +118,91 @@ export default function MealPlanScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-text text-lg">Loading...</Text>
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+        <Text style={styles.loadingText}>Loading meal plan...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <View className="bg-primary px-4 pb-4 pt-2">
-        <Text className="text-2xl font-bold text-white mb-1">Plan My Meal</Text>
-        <Text className="text-white/80 text-sm">
-          {weeklyPlan ? `${formatDate(weeklyPlan.startDate)} - ${formatDate(weeklyPlan.endDate)}` : ''}
-        </Text>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Plan My Meal</Text>
+          <Text style={styles.subtitle}>
+            {weeklyPlan ? `${formatDate(weeklyPlan.startDate)} - ${formatDate(weeklyPlan.endDate)}` : ''}
+          </Text>
+        </View>
       </View>
 
       {/* Days List */}
-      <ScrollView className="flex-1 px-4 py-4">
-        {weeklyPlan?.days.map((dayPlan) => (
-          <View key={dayPlan.day} className="mb-4 bg-cardBackground rounded-xl p-4 shadow-sm border border-border">
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {weeklyPlan?.days.map((dayPlan, dayIndex) => (
+          <View key={dayPlan.day} style={styles.dayCard}>
             {/* Day Header */}
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-xl font-bold text-text">{getDayLabel(dayPlan.day)}</Text>
-              <Text className="text-text/60 text-sm">{formatDate(dayPlan.date)}</Text>
+            <View style={styles.dayHeader}>
+              <View style={styles.dayInfo}>
+                <View style={[styles.dayBadge, { backgroundColor: Colors.light.primaryLightest }]}>
+                  <Text style={[styles.dayLabel, { color: Colors.light.primaryDark }]})}>
+                    {getDayLabel(dayPlan.day)}
+                  </Text>
+                </View>
+                <Text style={styles.dateText}>{formatDate(dayPlan.date)}</Text>
+              </View>
+              <View style={styles.mealCount}>
+                <Text style={styles.mealCountText}>
+                  {Object.values(dayPlan.meals).filter(Boolean).length}/4
+                </Text>
+              </View>
             </View>
 
             {/* Meal Slots */}
-            {MEAL_TYPES.map((mealType) => {
-              const meal = dayPlan.meals[mealType.type];
-              return (
-                <View key={mealType.type} className="mb-2">
-                  {meal ? (
-                    <TouchableOpacity
-                      onLongPress={() => handleDeleteMeal(meal.id)}
-                      onPress={() => handleMealPress(meal.id)}
-                      className="flex-row items-center p-3 bg-primary/10 rounded-lg"
-                      activeOpacity={0.7}
-                    >
-                      <Text className="text-2xl mr-3">{getMealTypeIcon(meal.type)}</Text>
-                      <View className="flex-1">
-                        <Text className="font-semibold text-text text-base">{meal.name}</Text>
-                        <Text className="text-text/60 text-sm">{meal.servings} servings</Text>
-                      </View>
-                      <Ionicons name="pencil" size={20} color={Colors.light.primary} />
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={() => handleAddMeal(dayPlan.day, mealType.type)}
-                      className="flex-row items-center p-3 border-2 border-dashed border-primary/30 rounded-lg"
-                      activeOpacity={0.7}
-                    >
-                      <Text className="text-xl mr-3 opacity-50">{mealType.icon}</Text>
-                      <Text className="text-primary/60 font-medium">Add {mealType.label}</Text>
-                      <Ionicons name="add-circle-outline" size={20} color={Colors.light.primary} style={{ marginLeft: 'auto' }} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })}
+            <View style={styles.mealSlots}>
+              {MEAL_TYPES.map((mealType) => {
+                const meal = dayPlan.meals[mealType.type];
+                return (
+                  <View key={mealType.type} style={styles.mealSlot}>
+                    {meal ? (
+                      <TouchableOpacity
+                        onLongPress={() => handleDeleteMeal(meal.id)}
+                        onPress={() => handleMealPress(meal.id)}
+                        style={styles.mealCard}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.mealTypeIndicator, { backgroundColor: mealType.color }]} />
+                        <View style={styles.mealContent}>
+                          <Text style={styles.mealIcon}>{mealType.icon}</Text>
+                          <View style={styles.mealInfo}>
+                            <Text style={styles.mealName} numberOfLines={1}>{meal.name}</Text>
+                            <Text style={styles.mealDetails}>{meal.servings} servings</Text>
+                          </View>
+                        </View>
+                        <Ionicons name="create-outline" size={20} color={Colors.light.textSecondary} />
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => handleAddMeal(dayPlan.day, mealType.type)}
+                        style={styles.addMealCard}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.mealTypeIndicator, { backgroundColor: Colors.light.borderLight }]} />
+                        <Text style={styles.addMealIcon}>{mealType.icon}</Text>
+                        <Text style={styles.addMealText}>Add {mealType.label}</Text>
+                        <View style={styles.addIcon}>
+                          <Ionicons name="add" size={18} color={Colors.light.primary} />
+                        </View>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -190,12 +211,200 @@ export default function MealPlanScreen() {
       {weeklyPlan && weeklyPlan.days.some((d) => Object.keys(d.meals).length > 0) && (
         <TouchableOpacity
           onPress={() => router.push('/ingredients')}
-          className="absolute bottom-24 right-4 bg-primary rounded-full p-4 shadow-lg"
-          activeOpacity={0.8}
+          style={[styles.fab, { backgroundColor: Colors.light.primary }]}
+          activeOpacity={0.9}
         >
-          <Ionicons name="sparkles" size={28} color="white" />
+          <Ionicons name="sparkles" size={24} color={Colors.light.textLight} />
         </TouchableOpacity>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: Colors.light.textSecondary,
+  },
+  header: {
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 16,
+  },
+  headerContent: {
+    gap: 4,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.light.textLight,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: Colors.light.textLight,
+    opacity: 0.9,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  dayCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: Colors.light.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  dayInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dayBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  dayLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  dateText: {
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+  },
+  mealCount: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+  },
+  mealCountText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.light.textSecondary,
+  },
+  mealSlots: {
+    padding: 12,
+    gap: 8,
+  },
+  mealSlot: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  mealCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.primaryLightest,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.borderLight,
+  },
+  mealTypeIndicator: {
+    width: 4,
+    height: '100%',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  mealContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 12,
+    gap: 12,
+  },
+  mealIcon: {
+    fontSize: 20,
+  },
+  mealInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  mealName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.text,
+  },
+  mealDetails: {
+    fontSize: 13,
+    color: Colors.light.textSecondary,
+  },
+  addMealCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.inputBackground,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.light.border,
+    borderStyle: 'dashed',
+  },
+  addMealIcon: {
+    fontSize: 18,
+    marginLeft: 12,
+    opacity: 0.5,
+  },
+  addMealText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.light.textSecondary,
+    marginLeft: 8,
+  },
+  addIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.light.cardBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+});
