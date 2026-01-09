@@ -71,9 +71,9 @@ export const shoppingListService = {
 
   getPlatformColor(platform: QuickCommercePlatform): string {
     const colors = {
-      zepto '#6C4AB6',
-      blinkit '#F98E04',
-      instamart '#FF5200',
+      zepto: '#6C4AB6',
+      blinkit: '#F98E04',
+      instamart: '#FF5200',
       generic: '#6B7280',
     };
     return colors[platform] || colors.generic;
@@ -81,9 +81,9 @@ export const shoppingListService = {
 
   getPlatformIcon(platform: QuickCommercePlatform): string {
     const icons = {
-      zepto '⚡',
-      blinkit '🛍️',
-      instamart '🛒',
+      zepto: '⚡',
+      blinkit: '🛍️',
+      instamart: '🛒',
       generic: '📋',
     };
     return icons[platform] || icons.generic;
