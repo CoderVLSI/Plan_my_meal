@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Ingredient } from '@/types/ingredient';
@@ -18,6 +19,7 @@ const PLATFORMS: { id: QuickCommercePlatform; name: string; icon: string; color:
 ];
 
 export default function ShoppingScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<QuickCommercePlatform>('generic');
