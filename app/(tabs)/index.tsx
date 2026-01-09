@@ -7,6 +7,7 @@ import { storageService } from '@/services/storageService';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Header from '@/components/Header';
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -138,27 +139,15 @@ export default function MealPlanScreen() {
   const progressPercentage = Math.round((totalMeals / totalPossible) * 100);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Gradient Header */}
-      <LinearGradient
-        colors={[Colors.light.primary, Colors.light.primaryDark]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerTop}>
-          <View style={styles.headerContent}>
-            <Text style={styles.greeting}>Good {getGreeting()}! 👋</Text>
-            <Text style={styles.title}>Plan My Meal</Text>
-          </View>
-          <TouchableOpacity style={styles.profileButton} activeOpacity={0.7}>
-            <View style={styles.profileAvatar}>
-              <Ionicons name="person" size={24} color={Colors.light.primary} />
-            </View>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <Header
+        title="Plan My Meal"
+        subtitle={weeklyPlan ? `${formatDate(weeklyPlan.startDate)} - ${formatDate(weeklyPlan.endDate)}` : undefined}
+        onProfilePress={() => router.push('/profile-modal')}
+      />
 
-        {/* Progress Card */}
+      {/* Progress Card */}
+      <View style={styles.progressCardContainer}>
         <View style={styles.progressCard}>
           <View style={styles.progressHeader}>
             <View style={styles.progressInfo}>
@@ -191,7 +180,7 @@ export default function MealPlanScreen() {
             </View>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Days List */}
       <ScrollView
@@ -309,58 +298,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textSecondary,
   },
-  header: {
+  progressCardContainer: {
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 20,
-    paddingBottom: 24,
-    paddingTop: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerContent: {
-    gap: 4,
-  },
-  greeting: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.light.textLight,
-    opacity: 0.9,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: Colors.light.textLight,
-    letterSpacing: -0.5,
-  },
-  profileButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  profileAvatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 24,
-    backgroundColor: Colors.light.textLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.light.textLight,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   progressCard: {
     backgroundColor: Colors.light.textLight,

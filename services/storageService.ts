@@ -63,4 +63,8 @@ export const storageService = {
   async clearAll(): Promise<void> {
     await AsyncStorage.clear();
   },
+
+  async clearAllData(): Promise<void> {
+    await AsyncStorage.clear();
+  },
 };

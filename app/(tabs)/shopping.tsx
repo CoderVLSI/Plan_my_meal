@@ -8,6 +8,7 @@ import { shoppingListService } from '@/services/shoppingListService';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import Header from '@/components/Header';
 
 const PLATFORMS: { id: QuickCommercePlatform; name: string; icon: string; color: string }[] = [
   { id: 'zepto', name: 'Zepto', icon: '⚡', color: '#6C4AB6' },
@@ -81,19 +82,18 @@ export default function ShoppingScreen() {
   const checkedCount = ingredients.filter((ing) => ing.checked).length;
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="bg-primary px-4 pb-4 pt-2">
-        <Text className="text-2xl font-bold text-white">Shopping List</Text>
-        <Text className="text-white/80 text-sm">
-          {ingredients.length > 0
+    <View style={styles.container}>
+      <Header
+        title="Shopping List"
+        subtitle={
+          ingredients.length > 0
             ? `${checkedCount}/${ingredients.length} items checked`
             : 'Export your shopping list'
-          }
-        </Text>
-      </View>
+        }
+        onProfilePress={() => router.push('/profile-modal')}
+      />
 
-      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 100 }}>
         {ingredients.length === 0 ? (
           <View className="items-center justify-center py-20">
             <Ionicons name="cart-outline" size={64} color={Colors.light.tabIconDefault} />
@@ -202,3 +202,14 @@ export default function ShoppingScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },
+});

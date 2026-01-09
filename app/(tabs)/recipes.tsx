@@ -6,6 +6,7 @@ import { storageService } from '@/services/storageService';
 import { geminiService } from '@/services/geminiService';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Header from '@/components/Header';
 
 export default function RecipesScreen() {
   const insets = useSafeAreaInsets();
@@ -63,16 +64,14 @@ export default function RecipesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="bg-primary px-4 pb-4 pt-2">
-        <Text className="text-2xl font-bold text-white">Recipes</Text>
-        <Text className="text-white/80 text-sm">
-          {meals.length > 0 ? `${meals.length} meals with recipes` : 'Get AI-generated recipes'}
-        </Text>
-      </View>
+    <View style={styles.container}>
+      <Header
+        title="Recipes"
+        subtitle={meals.length > 0 ? `${meals.length} meals with recipes` : 'Get AI-generated recipes'}
+        onProfilePress={() => router.push('/profile-modal')}
+      />
 
-      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 100 }}>
         {meals.length === 0 ? (
           <View className="items-center justify-center py-20">
             <Ionicons name="book-outline" size={64} color={Colors.light.tabIconDefault} />
@@ -129,3 +128,14 @@ export default function RecipesScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },
+});

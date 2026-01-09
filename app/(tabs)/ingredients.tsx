@@ -7,6 +7,7 @@ import { storageService } from '@/services/storageService';
 import { geminiService } from '@/services/geminiService';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Header from '@/components/Header';
 
 const INGREDIENT_ICONS: Record<string, string> = {
   vegetables: '🥬',
@@ -136,42 +137,38 @@ export default function IngredientsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="bg-primary px-4 pb-4 pt-2">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-2xl font-bold text-white">Ingredients</Text>
-            <Text className="text-white/80 text-sm">
-              {ingredients.length > 0 ? `${ingredients.length} items` : 'Generate your shopping list'}
-            </Text>
-          </View>
-          {ingredients.length > 0 && (
+    <View style={styles.container}>
+      <Header
+        title="Ingredients"
+        subtitle={ingredients.length > 0 ? `${ingredients.length} items` : 'Generate your shopping list'}
+        onProfilePress={() => router.push('/profile-modal')}
+        rightComponent={
+          ingredients.length > 0 ? (
             <TouchableOpacity
               onPress={handleCreateShoppingList}
-              className="bg-white/20 rounded-lg px-4 py-2"
+              style={styles.nextButton}
               activeOpacity={0.8}
             >
-              <Text className="text-white font-semibold text-sm">Next →</Text>
+              <Text style={styles.nextButtonText}>Next →</Text>
             </TouchableOpacity>
-          )}
-        </View>
-      </View>
+          ) : undefined
+        }
+      />
 
-      <ScrollView className="flex-1 px-4 py-4" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 100 }}>
         {!hasPlan ? (
-          <View className="items-center justify-center py-20">
+          <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={64} color={Colors.light.tabIconDefault} />
-            <Text className="text-text/60 text-lg mt-4 text-center">No meal plan found</Text>
-            <Text className="text-text/40 text-sm mt-2 text-center px-8">
+            <Text style={styles.emptyStateTitle}>No meal plan found</Text>
+            <Text style={styles.emptyStateSubtitle}>
               Add some meals to your weekly plan first
             </Text>
           </View>
         ) : ingredients.length === 0 ? (
-          <View className="items-center justify-center py-20">
+          <View style={styles.emptyState}>
             <Ionicons name="list-outline" size={64} color={Colors.light.tabIconDefault} />
-            <Text className="text-text/60 text-lg mt-4 text-center">No ingredients yet</Text>
-            <Text className="text-text/40 text-sm mt-2 text-center px-8">
+            <Text style={styles.emptyStateTitle}>No ingredients yet</Text>
+            <Text style={styles.emptyStateSubtitle}>
               Use AI to generate ingredients from your meal plan
             </Text>
           </View>
@@ -246,3 +243,43 @@ export default function IngredientsScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  nextButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  nextButtonText: {
+    color: Colors.light.textLight,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    color: Colors.light.textSecondary,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: Colors.light.textTertiary,
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+});
